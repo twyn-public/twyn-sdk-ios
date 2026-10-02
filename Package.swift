@@ -7,9 +7,10 @@ import PackageDescription
 // the values published by twyn-sdk-dist for each release.
 //
 // NOTE on private hosting: SwiftPM fetches binaryTarget URLs without an
-// interactive login. For a private repo, either (a) host the release asset on a
-// server reachable with credentials configured in ~/.netrc, or (b) use CocoaPods
-// with the private spec repo (see README / docs/integration.md).
+// interactive login, so a PRIVATE GitHub release returns 404. The supported
+// path is CocoaPods with `:git => ...twyn-sdk-dist.git` (see README /
+// docs/integration.md). To use SwiftPM, host the release asset on a server
+// reachable with credentials configured in ~/.netrc and point the URLs there.
 //
 // checksum = `swift package compute-checksum <artifact>.zip`
 

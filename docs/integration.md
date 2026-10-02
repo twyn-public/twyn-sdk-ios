@@ -1,44 +1,46 @@
-# iOS integration guide
+# iOS integration guide — Twyn SDK
 
-## 1. Requirements
+> Goal: get the SDK running in **your** app in ~10 minutes.
+> Copy the snippets, replace the placeholders, done.
 
-- iOS **15.6+**
-- Xcode 15+
-- The vendor liveness SDK (`T4Touchless`) + the Twyn binaries (`TwynTrustCore`,
-  `TwynDeviceCore`)
+---
 
-## 2. Add the binaries
+## 1. Get access to the SDK
 
-### Option A â€” CocoaPods (recommended, private)
+The binaries are **private**. Ask Twyn to add your GitHub account to
+`twyn-internal/twyn-sdk-dist`. CocoaPods then pulls the binaries with **your git
+credentials** — no tokens go in the `Podfile`.
 
+## 2. Add the binaries (CocoaPods — recommended)
+
+**`Podfile`**
 ```ruby
-# Podfile
 platform :ios, '15.6'
-
-source 'https://cdn.cocoapods.org'
-source 'https://github.com/twyn-internal/twyn-sdk-dist.git'   # private spec repo
 
 target 'YourApp' do
   use_frameworks!
 
+  # Twyn binaries (private repo, git credentials).
+  pod 'TwynTrustCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.0'
+  pod 'TwynDeviceCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.0'
+
+  # Vendor liveness SDK (provided by Twyn).
   pod 'T4Touchless'
-  pod 'TwynTrustCore', '~> 0.1'
-  pod 'TwynDeviceCore', '~> 0.1'
 end
 ```
 
 ```bash
+export LANG=en_US.UTF-8   # avoids a CocoaPods/Ruby encoding error
 pod install
 ```
 
-The private spec repo needs read access â€” configure git credentials (SSH key or a
-token in the keychain). Do **not** put tokens in the `Podfile`.
+> Run `pod install` inside your project folder (CocoaPods needs an `.xcodeproj`).
 
-### Option B â€” Swift Package Manager
+### Option B — Swift Package Manager
 
-Add `github.com/twyn-public/twyn-sdk-ios` as a package dependency. The manifest declares
-`binaryTarget`s; see `Package.swift`. Private hosting requires `.netrc` credentials
-or a publicly reachable mirror.
+SwiftPM `binaryTarget` downloads **without** credentials, so a **private** GitHub
+release returns `404`. If you need SwiftPM, host the `.xcframework.zip` on a server
+reachable with `.netrc` and point the `binaryTarget` there (see `Package.swift`).
 
 ## 3. Device identity / continuity
 
@@ -64,8 +66,8 @@ import T4Touchless
 let sdk = T4FastIDSDK()
 sdk.delegate = self
 sdk.personId = personId
-sdk.canal = "SICTM"
-sdk.env = "dev"
+sdk.canal = "TWYN"
+sdk.env = "dev"                 // "dev" or "prod"
 sdk.requestSteps = ["T4_FACE"]
 present(sdk, animated: true)
 ```
@@ -81,7 +83,7 @@ func onEnrollFaceError(code: Int, message: String) { }
 
 `TwynTrustCore` runs structural anti-instrumentation probes (anonymous executable
 regions, thread names, function-prologue integrity, exception ports) and produces
-**evidence**. It does not make the trust decision â€” that is server-side.
+**evidence**. It does not make the trust decision — that is server-side.
 
 ```swift
 import TwynTrustCore
@@ -92,12 +94,29 @@ import TwynTrustCore
 
 The SDK produces capture + integrity **evidence**. The gateway returns the
 authoritative decision (`APPROVED` / `CHALLENGE` / `REJECTED`) and the reason
-codes (`SENTINEL_BLOCK`, `KEYATTEST_FAIL`, `ENGINE_FAKE`, â€¦). Always read the
+codes (`SENTINEL_BLOCK`, `KEYATTEST_FAIL`, `ENGINE_FAKE`, …). Always read the
 verdict from your backend, not from the local callback alone.
 
 ## 7. App Attest / DeviceCheck
 
 The device-identity flow uses Apple **App Attest** (Secure Enclave) and
-**DeviceCheck**. Ensure the capability is enabled for your App ID and that the
-device is not jailbroken (the SDK will refuse on compromised devices in enforce
-mode).
+**DeviceCheck**. Enable the capability for your App ID; on jailbroken devices the
+flow is refused in enforce mode.
+
+## Options reference
+
+| Field | Values | Meaning |
+|---|---|---|
+| `personId` | string | the identity being enrolled |
+| `canal` | string | channel (default `TWYN`) |
+| `env` | `dev` / `prod` | environment |
+| `requestSteps` | `T4_FACE`, `T4_FINGER`, `T4_DOCUMENT` | which captures to run |
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| `pod install` can't find the pod | your GitHub account isn't added to `twyn-internal/twyn-sdk-dist` |
+| `Encoding::CompatibilityError` | `export LANG=en_US.UTF-8` before `pod install` |
+| "Could not select an Xcode project" | run `pod install` inside your project folder |
+| SwiftPM `badResponseStatusCode(404)` | private release — use CocoaPods (or a `.netrc` host) |
