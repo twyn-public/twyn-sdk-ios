@@ -13,7 +13,7 @@ set -u
 
 SDK_REPO="https://github.com/twyn-internal/twyn-ios-sdk.git"
 DIST_REPO="https://github.com/twyn-internal/twyn-sdk-dist.git"
-SDK_TAG="${1:-ios-0.1.6}"
+SDK_TAG="${1:-ios-0.3.0}"
 DIST_TAG="${2:-ios-0.2.0}"
 
 echo "Twyn iOS SDK - access check"
