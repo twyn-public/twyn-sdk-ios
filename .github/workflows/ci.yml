@@ -9,7 +9,11 @@ permissions:
   contents: read
 
 jobs:
-  build-sample:
+  # Validates the end-to-end distribution: CocoaPods clones the private
+  # twyn-internal/twyn-sdk-dist repo at tag `ios-0.1.0` and installs both
+  # xcframework pods. This is the supported integration path (SwiftPM's
+  # binaryTarget cannot authenticate to a private release).
+  cocoapods-distribution:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
@@ -17,15 +21,25 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_15.4.app
 
-      # Resolves the binaryTarget from twyn-sdk-dist. Private hosting requires
-      # credentials — provide them via a .netrc created from secrets.
-      - name: Configure package credentials
+      # Authenticate git to the private distribution repo.
+      # Secret TWYN_SDK_DIST_TOKEN: a GitHub token with read access to
+      # twyn-internal/twyn-sdk-dist.
+      - name: Configure git credentials for the private repo
         run: |
-          echo "machine github.com" > ~/.netrc
-          echo "  login ${{ secrets.TWYN_MAVEN_USER }}" >> ~/.netrc
-          echo "  password ${{ secrets.TWYN_MAVEN_TOKEN }}" >> ~/.netrc
-          chmod 600 ~/.netrc
+          git config --global url."https://x-access-token:${{ secrets.TWYN_SDK_DIST_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
-      - name: Build sample
+      - name: CocoaPods install (resolves the private binaries)
+        working-directory: ci
+        env:
+          LANG: en_US.UTF-8
+          LC_ALL: en_US.UTF-8
+        run: pod install
+
+      - name: Assert the binaries were installed
+        working-directory: ci
         run: |
-          swift build
+          grep -q 'TwynTrustCore (0.1.0)' Podfile.lock
+          grep -q 'TwynDeviceCore (0.1.0)' Podfile.lock
+          test -d Pods/TwynTrustCore
+          test -d Pods/TwynDeviceCore
+          echo "OK: TwynTrustCore + TwynDeviceCore resolved from twyn-sdk-dist @ ios-0.1.0"
