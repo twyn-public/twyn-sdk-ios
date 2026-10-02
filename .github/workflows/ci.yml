@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-sample:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+
+      # Resolves the binaryTarget from twyn-sdk-dist. Private hosting requires
+      # credentials — provide them via a .netrc created from secrets.
+      - name: Configure package credentials
+        run: |
+          echo "machine github.com" > ~/.netrc
+          echo "  login ${{ secrets.TWYN_MAVEN_USER }}" >> ~/.netrc
+          echo "  password ${{ secrets.TWYN_MAVEN_TOKEN }}" >> ~/.netrc
+          chmod 600 ~/.netrc
+
+      - name: Build sample
+        run: |
+          swift build
