@@ -130,10 +130,26 @@ final class EnrollmentCoordinator: NSObject, ObservableObject, T4FastIDDelegate 
 
         let alert = UIAlertController(title: title, message: msg, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
+        presentAlert(alert)
+    }
+
+    /// Presents an alert on whatever VC is actually in the window hierarchy.
+    /// Retries while the SDK VC is still being dismissed (otherwise UIKit logs
+    /// "view is not in the window hierarchy" and nothing shows).
+    private func presentAlert(_ alert: UIAlertController) {
         guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let root = scene.windows.first(where: { $0.isKeyWindow })?.rootViewController else { return }
-        var top = root
-        while let presented = top.presentedViewController { top = presented }
+              let window = scene.windows.first(where: { $0.isKeyWindow }) ?? scene.windows.first,
+              var top = window.rootViewController else { return }
+
+        // Descend only into presented VCs whose view is actually on screen.
+        while let presented = top.presentedViewController, presented.view.window != nil {
+            top = presented
+        }
+        if top.presentedViewController != nil {
+            // A VC is still presented (SDK dismissing) — wait and retry.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { self.presentAlert(alert) }
+            return
+        }
         top.present(alert, animated: true)
     }
 
