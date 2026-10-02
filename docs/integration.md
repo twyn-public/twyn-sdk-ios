@@ -24,6 +24,12 @@ git config --global url."git@github.com:".insteadOf "https://github.com/"
 You must be **added to `twyn-internal`**; otherwise GitHub returns
 `Repository not found` (it hides private repos you can't see).
 
+Verify everything in one shot (prints an actionable message if it fails):
+
+```bash
+bash scripts/check-access.sh          # access + the ios-0.1.1 tag
+```
+
 ## 2. Add the binaries (CocoaPods — recommended)
 
 **`Podfile`**

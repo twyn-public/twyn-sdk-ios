@@ -30,7 +30,11 @@
 **1. Get access + credentials** — ask Twyn to add your GitHub account to the private
 repo `twyn-internal/twyn-sdk-dist`. Git then needs to authenticate as you: GitHub no
 longer accepts passwords, so configure a **PAT** or **SSH** (see
-[Private repo credentials](#private-repo-credentials)).
+[Private repo credentials](#private-repo-credentials)). Verify before installing:
+
+```bash
+bash scripts/check-access.sh          # checks access + the ios-0.1.1 tag
+```
 
 **2. Podfile:**
 ```ruby
@@ -102,6 +106,12 @@ authenticated. GitHub does **not** accept passwords for git; use one of:
 
 You must also be **added to `twyn-internal`** by Twyn — otherwise GitHub hides the
 repo and returns `Repository not found`.
+
+Verify the whole setup (access + tag) in one shot:
+
+```bash
+bash scripts/check-access.sh
+```
 
 ## Troubleshooting
 
