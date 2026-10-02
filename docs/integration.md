@@ -5,14 +5,13 @@
 
 ---
 
-## 1. Get access to the SDK
+## 1. Get access + credentials
 
-The binaries are **private**. Ask Twyn to add your GitHub account to
-`twyn-internal/twyn-sdk-dist`. CocoaPods then pulls the binaries with **your git
-credentials** — no tokens go in the `Podfile`.
+The SDK is **private** (`twyn-internal/twyn-ios-sdk` + `twyn-internal/twyn-sdk-dist`).
+Ask Twyn to add your GitHub account to `twyn-internal`. CocoaPods then pulls the
+pods with **your git credentials** — no tokens go in the `Podfile`.
 
-Because GitHub no longer accepts passwords for git, authenticate with a **PAT** or
-**SSH**:
+GitHub no longer accepts passwords for git, so authenticate with a **PAT** or **SSH**:
 
 ```bash
 # PAT (HTTPS)
@@ -21,30 +20,33 @@ git config --global url."https://<USER>:<TOKEN>@github.com/".insteadOf "https://
 git config --global url."git@github.com:".insteadOf "https://github.com/"
 ```
 
-You must be **added to `twyn-internal`**; otherwise GitHub returns
-`Repository not found` (it hides private repos you can't see).
-
-Verify everything in one shot (prints an actionable message if it fails):
+Verify in one shot (prints an actionable message if it fails):
 
 ```bash
-bash scripts/check-access.sh          # access + the ios-0.1.1 tag
+bash scripts/check-access.sh
 ```
 
-## 2. Add the binaries (CocoaPods — recommended)
+## 2. Add the SDK (CocoaPods)
 
 **`Podfile`**
 ```ruby
 platform :ios, '15.6'
 
 target 'YourApp' do
-  use_frameworks!
+  use_frameworks! :linkage => :static
 
-  # Twyn binaries (private repo, git credentials).
-  pod 'TwynTrustCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.1'
-  pod 'TwynDeviceCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.1'
+  pod 'TwynIOSSDK',    :git => 'https://github.com/twyn-internal/twyn-ios-sdk.git',  :tag => 'ios-0.1.6'
+  pod 'TwynTrustCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.2.0'
+  pod 'TwynDeviceCore',:git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.2.0'
+end
 
-  # Vendor liveness SDK (provided by Twyn).
-  pod 'T4Touchless'
+post_install do |installer|
+  installer.pods_project.targets.each do |t|
+    t.build_configurations.each do |c|
+      c.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.6'
+      c.build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = 'YES'
+    end
+  end
 end
 ```
 
@@ -54,98 +56,82 @@ pod install
 ```
 
 > Run `pod install` inside your project folder (CocoaPods needs an `.xcodeproj`).
-> The cores expose a **C ABI** (no Swift modulemap): add a bridging header that
-> imports `twyn_device_core.h`, `sentinel_ios.h` and `twyn_runtime.h`.
+> Then open the **`.xcworkspace`** (not the `.xcodeproj`) — that is what links the pods.
 
-### Option B — Swift Package Manager
+## 3. Present the SDK
 
-SwiftPM `binaryTarget` downloads **without** credentials, so a **private** GitHub
-release returns `404`. If you need SwiftPM, host the `.xcframework.zip` on a server
-reachable with `.netrc` and point the `binaryTarget` there (see `Package.swift`).
-
-## 3. Device identity / continuity
+The face capture is driven entirely by the SDK. Your app only creates it, sets the
+params, presents it and receives the callbacks.
 
 ```swift
-// TwynDeviceCore — installation id (persist it in the Keychain)
-if let c = twyn_dc_install_id() {
-    let installationId = String(cString: c)
-    twyn_dc_free(c)
+import TwynIOSSDK
+
+final class Host: NSObject, T4FastIDDelegate {
+    func start(personId: String, from vc: UIViewController) {
+        let sdk = T4FastIDSDK()
+        sdk.delegate = self
+        sdk.sdkKey = "<your-sdk-key>"
+        sdk.personId = personId
+        sdk.canal = "TWYN"
+        sdk.env = "dev"                 // "dev" or "prod"
+        sdk.requestSteps = ["T4_FACE"]
+        sdk.tot = ""
+        sdk.actionTimeOut = 20000
+        sdk.showSuccessDialog = false
+        sdk.openT4Fingers = false
+        sdk.language = "en"
+        sdk.iBeta = true
+        sdk.modalPresentationStyle = .fullScreen
+        vc.present(sdk, animated: true)
+    }
+
+    // T4FastIDDelegate
+    func onEnrollFaceCompleted(isAlive: Bool, imageDataString: String, tcn: String) { }
+    func onEnrollFaceError(code: Int, message: String) { }
+    func onEnrollDocumentCompleted(isValid: Bool, frontDataString: String?, backDataString: String?, tcn: String) { }
+    func onEnrollDocumentError(code: Int, message: String) { }
+    func onTransactionCompleted(workflowInstanceId: String, tot: String) { }
+    func onTransactionFailed(code: Int, message: String) { }
+    func onSDKStatusChanged(code: Int, message: String) { }
 }
-
-// device_id / profile_hash from the device components (JSON)
-if let c = twyn_dc_fingerprint(componentsJSON) {
-    let deviceId = String(cString: c)
-    twyn_dc_free(c)
-}
 ```
 
-Attach the device id to the transaction so the backend can apply device-graph risk.
-Higher-level wrappers (`TwynDevice`, App Attest orchestration) live in the private
-`TwynIOSSDK` layer.
+> The app bundle id must be **allowed on the gateway**. Ask Twyn to register it.
 
-## 4. Liveness (vendor SDK)
+## 4. Result / decision (server-side)
 
-The face capture UI is provided by `T4Touchless` (`T4FastIDSDK`). Register the
-delegate and present it:
+On `onEnrollFaceCompleted` read the authoritative decision from the gateway audit
+API and show it to the user (the sample does this — `APROVADO / REPROVADO / EM ANÁLISE`):
 
 ```swift
-import T4Touchless
-
-let sdk = T4FastIDSDK()
-sdk.delegate = self
-sdk.personId = personId
-sdk.canal = "TWYN"
-sdk.env = "dev"                 // "dev" or "prod"
-sdk.requestSteps = ["T4_FACE"]
-present(sdk, animated: true)
+let url = URL(string: "https://<your-gateway>/api/audit/decisions?limit=1")!
+let obj = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any]
+let dec = (obj?["items"] as? [[String: Any]])?.first
+// dec["decision"] -> APPROVED / CHALLENGE / REJECTED
+// dec["riskScore"], dec["reasonCodes"], dec["signals"]["sentinel"]["decision"]
 ```
 
-Delegate callbacks:
+## 5. What the SDK does under the hood
 
-```swift
-func onEnrollFaceCompleted(isAlive: Bool, imageDataString: String, tcn: String) { }
-func onEnrollFaceError(code: Int, message: String) { }
-```
-
-## 5. Runtime integrity (TwynTrustCore)
-
-`TwynTrustCore` runs structural anti-instrumentation probes (anonymous executable
-regions, thread names, function-prologue integrity, exception ports) and produces
-**evidence**. It does not make the trust decision — that is server-side.
-
-```swift
-// Full scan -> ThreatReport JSON. Collect the device's URL schemes first
-// (LaunchServices) and pass them as a JSON array; NULL / "[]" is allowed.
-if let c = sentinel_ios_analyze_with_schemes(nil, nil, 0, schemesJSON) {
-    let report = String(cString: c)
-    sentinel_ios_free(c)
-}
-
-// crate version (do not free)
-if let v = twyn_runtime_version() { print(String(cString: v)) }
-```
-
-## 6. Decision is server-side
-
-The SDK produces capture + integrity **evidence**. The gateway returns the
-authoritative decision (`APPROVED` / `CHALLENGE` / `REJECTED`) and the reason
-codes (`SENTINEL_BLOCK`, `KEYATTEST_FAIL`, `ENGINE_FAKE`, …). Always read the
-verdict from your backend, not from the local callback alone.
-
-## 7. App Attest / DeviceCheck
-
-The device-identity flow uses Apple **App Attest** (Secure Enclave) and
-**DeviceCheck**. Enable the capability for your App ID; on jailbroken devices the
-flow is refused in enforce mode.
+- Face capture / liveness (`T4FastIDSDK`) + enrollment UI.
+- **Twyn camera integrity** — instruments the capture session (exposure challenge,
+  ownership, provenance) and submits the evidence bound to the transaction.
+- **Sentinel** — runs the Rust device-integrity scan and submits it to the Sentinel
+  dash (with App Attest), then links the report to the transaction.
+- **App Attest / DeviceCheck** — device identity / continuity (`TwynDevice`).
+- The Rust cores (`TwynTrustCore`, `TwynDeviceCore`) produce **evidence** only; the
+  decision is made by the gateway.
 
 ## Options reference
 
 | Field | Values | Meaning |
 |---|---|---|
+| `sdkKey` | string | SDK key issued by Twyn |
 | `personId` | string | the identity being enrolled |
 | `canal` | string | channel (default `TWYN`) |
 | `env` | `dev` / `prod` | environment |
-| `requestSteps` | `T4_FACE`, `T4_FINGER`, `T4_DOCUMENT` | which captures to run |
+| `requestSteps` | `T4_FACE`, `T4_DOCUMENT`, … | which captures to run |
+| `language` | `en` / `pt` | UI language |
 
 ## Troubleshooting
 
@@ -154,7 +140,8 @@ flow is refused in enforce mode.
 | `fatal: could not read Username for 'https://github.com'` | git has no credentials — configure a PAT/SSH (§1) |
 | `remote: Invalid username or token` / `Authentication failed` | token wrong/expired or lacks access |
 | `Repository not found` (404) | your GitHub account isn't a member of `twyn-internal` |
-| `pod install` can't find the pod | access/credentials (§1) |
+| `transitive dependencies that include statically linked binaries` | use `use_frameworks! :linkage => :static` |
+| `IPHONEOS_DEPLOYMENT_TARGET ... supported ... 15.0` | add the `post_install` forcing `15.6` |
 | `Encoding::CompatibilityError` | `export LANG=en_US.UTF-8` before `pod install` |
 | "Could not select an Xcode project" | run `pod install` inside your project folder |
-| SwiftPM `badResponseStatusCode(404)` | private release — use CocoaPods (or a `.netrc` host) |
+| "no such module 'TwynIOSSDK'" | open the `.xcworkspace` (not the `.xcodeproj`) |

@@ -1,8 +1,8 @@
 # Twyn iOS SDK — integration sample
 
-> Everything you need to integrate the **Twyn iOS SDK**: a working sample, a
-> step-by-step guide, and the SDK shipped as signed `.xcframework` binaries from a
-> private repository.
+> Everything you need to integrate the **Twyn iOS SDK**: a working sample and a
+> step-by-step guide. The SDK itself (face liveness + device integrity) is shipped
+> as a private CocoaPod from a private repository.
 >
 > This repo contains **no proprietary logic** — only the integration surface.
 
@@ -11,29 +11,30 @@
 | I want to… | Go to |
 |---|---|
 | **integrate the SDK in my app** | [`docs/integration.md`](docs/integration.md) (10-minute guide) |
-| **see it working first** | `SampleApp/` — open in Xcode and run |
+| **see it working first** | `SampleApp/` — open `TwynSampleApp.xcworkspace` and run |
 | **understand the options** | [`docs/integration.md`](docs/integration.md) → *Options reference* |
 
 ## SDK at a glance
 
 | Artifact | Type | What it is |
 |---|---|---|
-| `TwynTrustCore` | `.xcframework` (static) | runtime-integrity probes (anti-instrumentation) |
-| `TwynDeviceCore` | `.xcframework` (static) | device identity / continuity (App Attest, DeviceCheck) |
-| `T4Touchless` | CocoaPod (vendor) | liveness / face capture UI |
+| `TwynIOSSDK` | CocoaPod (private, source) | the whole SDK: face liveness + enrollment UI + Twyn camera/device layers |
+| `TwynTrustCore` | `.xcframework` (private) | runtime-integrity probes (anti-instrumentation) |
+| `TwynDeviceCore` | `.xcframework` (private) | device identity / continuity (App Attest, DeviceCheck) |
+| `TwynFastID` | CocoaPod (private, vendor) | optional on-device finger engine (not needed for the face flow) |
 
 - Deployment target: **iOS 15.6+**
 - Architectures: `arm64` (device) + `arm64/x86_64` (simulator)
 
-## Quick start (CocoaPods — recommended)
+## Quick start (CocoaPods)
 
-**1. Get access + credentials** — ask Twyn to add your GitHub account to the private
-repo `twyn-internal/twyn-sdk-dist`. Git then needs to authenticate as you: GitHub no
-longer accepts passwords, so configure a **PAT** or **SSH** (see
-[Private repo credentials](#private-repo-credentials)). Verify before installing:
+**1. Get access + credentials** — ask Twyn to add your GitHub account to
+`twyn-internal` (repos `twyn-ios-sdk` and `twyn-sdk-dist`). Git then needs to
+authenticate as you: GitHub no longer accepts passwords, so configure a **PAT** or
+**SSH** (see [Private repo credentials](#private-repo-credentials)). Verify first:
 
 ```bash
-bash scripts/check-access.sh          # checks access + the ios-0.1.1 tag
+bash scripts/check-access.sh
 ```
 
 **2. Podfile:**
@@ -41,14 +42,22 @@ bash scripts/check-access.sh          # checks access + the ios-0.1.1 tag
 platform :ios, '15.6'
 
 target 'YourApp' do
-  use_frameworks!
+  use_frameworks! :linkage => :static   # the cores are static binaries
 
-  # Twyn binaries — pulled from the private repo with your git credentials.
-  pod 'TwynTrustCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.1'
-  pod 'TwynDeviceCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.1'
+  # The Twyn SDK (private). Pulled with your git credentials.
+  pod 'TwynIOSSDK',    :git => 'https://github.com/twyn-internal/twyn-ios-sdk.git',  :tag => 'ios-0.1.6'
+  pod 'TwynTrustCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.2.0'
+  pod 'TwynDeviceCore',:git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.2.0'
+end
 
-  # Vendor liveness SDK (provided by Twyn).
-  pod 'T4Touchless'
+# Xcode 26+ requires iOS >= 15.0 for every pod target.
+post_install do |installer|
+  installer.pods_project.targets.each do |t|
+    t.build_configurations.each do |c|
+      c.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.6'
+      c.build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = 'YES'
+    end
+  end
 end
 ```
 
@@ -57,44 +66,38 @@ end
 export LANG=en_US.UTF-8   # avoids a CocoaPods/Ruby encoding error
 pod install
 ```
-
-The cores expose a **C ABI** (no Swift modulemap), so add a bridging header:
-
-```objc
-// YourApp-Bridging-Header.h
-#import "twyn_device_core.h"   // TwynDeviceCore
-#import "sentinel_ios.h"       // TwynTrustCore
-#import "twyn_runtime.h"       // TwynTrustCore
-```
 ```swift
-// installation id (persist it in the Keychain)
-if let c = twyn_dc_install_id() { print(String(cString: c)); twyn_dc_free(c) }
+import TwynIOSSDK
 
-// full integrity scan -> ThreatReport JSON (evidence)
-if let c = sentinel_ios_analyze_with_schemes(nil, nil, 0, "[]") {
-    print(String(cString: c)); sentinel_ios_free(c)
-}
+// Present the SDK and receive the callbacks — no capture logic in your app.
+let sdk = T4FastIDSDK()
+sdk.delegate = self
+sdk.sdkKey = "<your-sdk-key>"
+sdk.personId = personId
+sdk.canal = "TWYN"
+sdk.env = "dev"                 // "dev" or "prod"
+sdk.requestSteps = ["T4_FACE"]
+present(sdk, animated: true)
+
+// T4FastIDDelegate
+func onEnrollFaceCompleted(isAlive: Bool, imageDataString: String, tcn: String) { }
+func onEnrollFaceError(code: Int, message: String) { }
 ```
 
-See `SampleApp/` for the complete, buildable example. Higher-level Swift wrappers
-(`TwynDevice`, camera integrity) live in the private `TwynIOSSDK` layer.
+The SDK runs the face capture, the Twyn camera-integrity challenge, the Sentinel
+device scan, App Attest, and submits everything to the gateway. See `SampleApp/`
+for the full example (including the **APROVADO / REPROVADO** result dialog read
+from the gateway audit API).
 
-> ⚠️ The **final decision is server-side**. The SDK produces capture + integrity
-> **evidence**; the authoritative APPROVED / REJECTED comes from your backend.
-
-## Why CocoaPods (and not SwiftPM)
-
-The binaries are **private**. CocoaPods pulls them with your **git credentials**
-(private-safe). SwiftPM `binaryTarget` downloads the release asset **without**
-credentials, so a private GitHub release returns `404`. If you need SwiftPM, host
-the `.xcframework.zip` on a server reachable with `.netrc` (see `Package.swift`).
+> The **final decision is server-side**. The SDK produces capture + integrity
+> **evidence**; the authoritative APPROVED / REJECTED comes from the gateway.
 
 ## Private repo credentials
 
-The binaries live in the private repo `twyn-internal/twyn-sdk-dist`, so git must be
-authenticated. GitHub does **not** accept passwords for git; use one of:
+The SDK lives in the private repos `twyn-ios-sdk` and `twyn-sdk-dist`, so git must
+be authenticated. GitHub does **not** accept passwords for git; use one of:
 
-- **PAT (HTTPS)** — create a token with read access to the repo, then:
+- **PAT (HTTPS)** — create a token with read access, then:
   ```bash
   git config --global url."https://<USER>:<TOKEN>@github.com/".insteadOf "https://github.com/"
   ```
@@ -105,13 +108,7 @@ authenticated. GitHub does **not** accept passwords for git; use one of:
   ```
 
 You must also be **added to `twyn-internal`** by Twyn — otherwise GitHub hides the
-repo and returns `Repository not found`.
-
-Verify the whole setup (access + tag) in one shot:
-
-```bash
-bash scripts/check-access.sh
-```
+repos and returns `Repository not found`.
 
 ## Troubleshooting
 
@@ -121,9 +118,10 @@ bash scripts/check-access.sh
 | `remote: Invalid username or token` / `Authentication failed` | token wrong/expired or lacks access |
 | `Repository not found` (404) | your GitHub account isn't a member of `twyn-internal` |
 | `pod install` can't find the pod | access/credentials (above) |
+| `transitive dependencies that include statically linked binaries` | use `use_frameworks! :linkage => :static` |
+| `IPHONEOS_DEPLOYMENT_TARGET ... supported ... 15.0` | add the `post_install` forcing `15.6` |
 | `Encoding::CompatibilityError` | `export LANG=en_US.UTF-8` before `pod install` |
 | "Could not select an Xcode project" | run `pod install` inside your project folder |
-| `TwynDeviceCore` unresolved | check the tag `ios-0.1.1` and your git credentials |
 
 ## License
 
