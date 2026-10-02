@@ -1,8 +1,22 @@
-# Sample app — pulls the Twyn binaries from the private distribution repo.
-# CocoaPods clones it with your git credentials (private-safe).
 platform :ios, '15.6'
 
 target 'TwynSampleApp' do
-  pod 'TwynTrustCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.1'
-  pod 'TwynDeviceCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.1'
+  use_frameworks! :linkage => :static
+
+  # The full Twyn iOS SDK (face liveness + device integrity). Private repo.
+  pod 'TwynIOSSDK',    :git => 'https://github.com/twyn-internal/twyn-ios-sdk.git', :tag => 'ios-0.1.2'
+
+  # Rust cores (private).
+  pod 'TwynTrustCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.2.0'
+  pod 'TwynDeviceCore',:git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.2.0'
+end
+
+# Xcode 27 requires iOS >= 15.0 for every pod target.
+post_install do |installer|
+  installer.pods_project.targets.each do |t|
+    t.build_configurations.each do |c|
+      c.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.6'
+      c.build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = 'YES'
+    end
+  end
 end

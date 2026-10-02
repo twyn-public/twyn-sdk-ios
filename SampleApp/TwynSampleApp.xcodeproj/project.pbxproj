@@ -8,13 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		05C5B250839BD88F22767791 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 792D3369D79B5D6A340B371C /* ContentView.swift */; };
+		8FA225512D19CD3A6FE5C63F /* EnrollmentCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02268C8CC0F1B7FD174B3DD6 /* EnrollmentCoordinator.swift */; };
 		C2A6054C1487A888E0270C82 /* TwynSampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2190AF822CCFCB7FA113FE7 /* TwynSampleApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		02268C8CC0F1B7FD174B3DD6 /* EnrollmentCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnrollmentCoordinator.swift; sourceTree = "<group>"; };
 		792D3369D79B5D6A340B371C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		99B703E97D3975A3DE2533BD /* TwynSampleApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TwynSampleApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A0651AEFFA503C42B6BF2904 /* Twyn-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Twyn-Bridging-Header.h"; sourceTree = "<group>"; };
 		A2190AF822CCFCB7FA113FE7 /* TwynSampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwynSampleApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -31,7 +32,7 @@
 			isa = PBXGroup;
 			children = (
 				792D3369D79B5D6A340B371C /* ContentView.swift */,
-				A0651AEFFA503C42B6BF2904 /* Twyn-Bridging-Header.h */,
+				02268C8CC0F1B7FD174B3DD6 /* EnrollmentCoordinator.swift */,
 				A2190AF822CCFCB7FA113FE7 /* TwynSampleApp.swift */,
 			);
 			path = Sources;
@@ -101,6 +102,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				05C5B250839BD88F22767791 /* ContentView.swift in Sources */,
+				8FA225512D19CD3A6FE5C63F /* EnrollmentCoordinator.swift in Sources */,
 				C2A6054C1487A888E0270C82 /* TwynSampleApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -155,7 +157,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 0.1.1;
+				MARKETING_VERSION = 0.2.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -172,6 +174,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Face capture for liveness enrollment.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Device integrity signal.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Device integrity signal.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Saves the enrollment capture.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -181,7 +187,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = me.twyn.sampleapp;
 				SDKROOT = iphoneos;
-				SWIFT_OBJC_BRIDGING_HEADER = "Sources/Twyn-Bridging-Header.h";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -192,6 +197,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Face capture for liveness enrollment.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Device integrity signal.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Device integrity signal.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Saves the enrollment capture.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -201,7 +210,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = me.twyn.sampleapp;
 				SDKROOT = iphoneos;
-				SWIFT_OBJC_BRIDGING_HEADER = "Sources/Twyn-Bridging-Header.h";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -259,7 +267,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 0.1.1;
+				MARKETING_VERSION = 0.2.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
