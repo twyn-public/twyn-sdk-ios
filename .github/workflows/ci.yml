@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   # Validates the end-to-end distribution: CocoaPods clones the private
-  # twyn-internal/twyn-sdk-dist repo at tag `ios-0.1.0` and installs both
+  # twyn-internal/twyn-sdk-dist repo at tag `ios-0.1.1` and installs both
   # xcframework pods. This is the supported integration path (SwiftPM's
   # binaryTarget cannot authenticate to a private release).
   cocoapods-distribution:
@@ -38,8 +38,8 @@ jobs:
       - name: Assert the binaries were installed
         working-directory: ci
         run: |
-          grep -q 'TwynTrustCore (0.1.0)' Podfile.lock
-          grep -q 'TwynDeviceCore (0.1.0)' Podfile.lock
+          grep -q 'TwynTrustCore (0.1.1)' Podfile.lock
+          grep -q 'TwynDeviceCore (0.1.1)' Podfile.lock
           test -d Pods/TwynTrustCore
           test -d Pods/TwynDeviceCore
-          echo "OK: TwynTrustCore + TwynDeviceCore resolved from twyn-sdk-dist @ ios-0.1.0"
+          echo "OK: TwynTrustCore + TwynDeviceCore resolved from twyn-sdk-dist @ ios-0.1.1"

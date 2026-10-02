@@ -1,13 +1,13 @@
 # CI-only Podfile.
 #
 # Validates that the Twyn iOS binaries resolve from the PRIVATE distribution repo
-# (twyn-internal/twyn-sdk-dist) at tag `ios-0.1.0`, using the runner's git
+# (twyn-internal/twyn-sdk-dist) at tag `ios-0.1.1`, using the runner's git
 # credentials. `:integrate_targets => false` lets `pod install` run without an
 # app .xcodeproj (we only need to prove the distribution resolves).
 #
 # The integrator-facing equivalent (inside a real app) is:
-#   pod 'TwynTrustCore', :git => '.../twyn-sdk-dist.git', :tag => 'ios-0.1.0'
-#   pod 'TwynDeviceCore', :git => '.../twyn-sdk-dist.git', :tag => 'ios-0.1.0'
+#   pod 'TwynTrustCore', :git => '.../twyn-sdk-dist.git', :tag => 'ios-0.1.1'
+#   pod 'TwynDeviceCore', :git => '.../twyn-sdk-dist.git', :tag => 'ios-0.1.1'
 
 install! 'cocoapods', :integrate_targets => false
 platform :ios, '15.6'
@@ -15,6 +15,6 @@ platform :ios, '15.6'
 target 'CI' do
   use_frameworks!
 
-  pod 'TwynTrustCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.0'
-  pod 'TwynDeviceCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.0'
+  pod 'TwynTrustCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.1'
+  pod 'TwynDeviceCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.1'
 end

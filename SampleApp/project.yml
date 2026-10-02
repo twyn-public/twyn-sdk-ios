@@ -1,0 +1,32 @@
+# XcodeGen spec — run `xcodegen generate` in SampleApp/ to (re)create
+# TwynSampleApp.xcodeproj. The project links the Twyn pods via CocoaPods
+# (see Podfile), so the build entry point is TwynSampleApp.xcworkspace.
+name: TwynSampleApp
+options:
+  bundleIdPrefix: me.twyn
+  deploymentTarget:
+    iOS: "15.6"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    MARKETING_VERSION: "0.1.1"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.9"
+
+targets:
+  TwynSampleApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: me.twyn.sampleapp
+        # Reaches the C ABI of the distributed cores.
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/Twyn-Bridging-Header.h
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        TARGETED_DEVICE_FAMILY: "1,2"

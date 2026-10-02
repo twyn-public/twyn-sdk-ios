@@ -38,8 +38,8 @@ target 'YourApp' do
   use_frameworks!
 
   # Twyn binaries — pulled from the private repo with your git credentials.
-  pod 'TwynTrustCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.0'
-  pod 'TwynDeviceCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.0'
+  pod 'TwynTrustCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.1'
+  pod 'TwynDeviceCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.1'
 
   # Vendor liveness SDK (provided by Twyn).
   pod 'T4Touchless'
@@ -77,7 +77,7 @@ the `.xcframework.zip` on a server reachable with `.netrc` (see `Package.swift`)
 | `pod install` can't find the pod | your GitHub account isn't added to `twyn-internal/twyn-sdk-dist` |
 | `Encoding::CompatibilityError` | `export LANG=en_US.UTF-8` before `pod install` |
 | "Could not select an Xcode project" | run `pod install` inside your project folder |
-| `TwynDeviceCore` unresolved | check the tag `ios-0.1.0` and your git credentials |
+| `TwynDeviceCore` unresolved | check the tag `ios-0.1.1` and your git credentials |
 
 ## License
 

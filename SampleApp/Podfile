@@ -1,0 +1,8 @@
+# Sample app — pulls the Twyn binaries from the private distribution repo.
+# CocoaPods clones it with your git credentials (private-safe).
+platform :ios, '15.6'
+
+target 'TwynSampleApp' do
+  pod 'TwynTrustCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.1'
+  pod 'TwynDeviceCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.1.1'
+end
