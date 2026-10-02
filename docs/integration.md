@@ -11,6 +11,19 @@ The binaries are **private**. Ask Twyn to add your GitHub account to
 `twyn-internal/twyn-sdk-dist`. CocoaPods then pulls the binaries with **your git
 credentials** — no tokens go in the `Podfile`.
 
+Because GitHub no longer accepts passwords for git, authenticate with a **PAT** or
+**SSH**:
+
+```bash
+# PAT (HTTPS)
+git config --global url."https://<USER>:<TOKEN>@github.com/".insteadOf "https://github.com/"
+# or SSH
+git config --global url."git@github.com:".insteadOf "https://github.com/"
+```
+
+You must be **added to `twyn-internal`**; otherwise GitHub returns
+`Repository not found` (it hides private repos you can't see).
+
 ## 2. Add the binaries (CocoaPods — recommended)
 
 **`Podfile`**
@@ -35,6 +48,8 @@ pod install
 ```
 
 > Run `pod install` inside your project folder (CocoaPods needs an `.xcodeproj`).
+> The cores expose a **C ABI** (no Swift modulemap): add a bridging header that
+> imports `twyn_device_core.h`, `sentinel_ios.h` and `twyn_runtime.h`.
 
 ### Option B — Swift Package Manager
 
@@ -45,15 +60,22 @@ reachable with `.netrc` and point the `binaryTarget` there (see `Package.swift`)
 ## 3. Device identity / continuity
 
 ```swift
-import TwynDeviceCore
+// TwynDeviceCore — installation id (persist it in the Keychain)
+if let c = twyn_dc_install_id() {
+    let installationId = String(cString: c)
+    twyn_dc_free(c)
+}
 
-let ev = try await TwynDevice.shared.evaluate(personId: personId)
-// ev.logicalDeviceId, ev.installationId, ev.continuityStatus,
-// ev.deviceTrustScore, ev.riskLevel, ev.appAttestRecorded, ev.deviceCheckRecorded
+// device_id / profile_hash from the device components (JSON)
+if let c = twyn_dc_fingerprint(componentsJSON) {
+    let deviceId = String(cString: c)
+    twyn_dc_free(c)
+}
 ```
 
-Attach the `logical_device_id` to the transaction so the backend can apply
-device-graph risk.
+Attach the device id to the transaction so the backend can apply device-graph risk.
+Higher-level wrappers (`TwynDevice`, App Attest orchestration) live in the private
+`TwynIOSSDK` layer.
 
 ## 4. Liveness (vendor SDK)
 
@@ -86,8 +108,15 @@ regions, thread names, function-prologue integrity, exception ports) and produce
 **evidence**. It does not make the trust decision — that is server-side.
 
 ```swift
-import TwynTrustCore
-// The core is invoked by the RASP integration layer; see SampleApp.
+// Full scan -> ThreatReport JSON. Collect the device's URL schemes first
+// (LaunchServices) and pass them as a JSON array; NULL / "[]" is allowed.
+if let c = sentinel_ios_analyze_with_schemes(nil, nil, 0, schemesJSON) {
+    let report = String(cString: c)
+    sentinel_ios_free(c)
+}
+
+// crate version (do not free)
+if let v = twyn_runtime_version() { print(String(cString: v)) }
 ```
 
 ## 6. Decision is server-side
@@ -116,7 +145,10 @@ flow is refused in enforce mode.
 
 | Symptom | Fix |
 |---|---|
-| `pod install` can't find the pod | your GitHub account isn't added to `twyn-internal/twyn-sdk-dist` |
+| `fatal: could not read Username for 'https://github.com'` | git has no credentials — configure a PAT/SSH (§1) |
+| `remote: Invalid username or token` / `Authentication failed` | token wrong/expired or lacks access |
+| `Repository not found` (404) | your GitHub account isn't a member of `twyn-internal` |
+| `pod install` can't find the pod | access/credentials (§1) |
 | `Encoding::CompatibilityError` | `export LANG=en_US.UTF-8` before `pod install` |
 | "Could not select an Xcode project" | run `pod install` inside your project folder |
 | SwiftPM `badResponseStatusCode(404)` | private release — use CocoaPods (or a `.netrc` host) |
