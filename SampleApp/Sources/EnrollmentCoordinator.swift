@@ -119,11 +119,11 @@ final class EnrollmentCoordinator: NSObject, ObservableObject, T4FastIDDelegate 
         let sentinel = ((dec?["signals"] as? [String: Any])?["sentinel"] as? [String: Any])?["decision"] as? String
         let reasons = (dec?["reasonCodes"] as? [String]) ?? []
 
-        var title = "INDEFINIDO", subtitle = "Sem decisão do gateway", symbol = "questionmark", color = Color.gray
+        var title = "INDEFINIDO", subtitle = "Sem decisão do gateway", symbol = "questionmark", color = TwynBrand.inkSoft
         switch decision {
-        case "APPROVED": title = "APROVADO"; subtitle = "Transação autorizada"; symbol = "checkmark.circle.fill"; color = .green
-        case "REJECTED": title = "REPROVADO"; subtitle = "Transação bloqueada"; symbol = "xmark.octagon.fill"; color = .red
-        case "CHALLENGE": title = "EM ANÁLISE"; subtitle = "Revisão necessária"; symbol = "exclamationmark.triangle.fill"; color = .orange
+        case "APPROVED": title = "APROVADO"; subtitle = "Transação autorizada"; symbol = "checkmark.circle.fill"; color = TwynBrand.success
+        case "REJECTED": title = "REPROVADO"; subtitle = "Transação bloqueada"; symbol = "xmark.octagon.fill"; color = TwynBrand.error
+        case "CHALLENGE": title = "EM ANÁLISE"; subtitle = "Revisão necessária"; symbol = "exclamationmark.triangle.fill"; color = TwynBrand.warning
         default: break
         }
 

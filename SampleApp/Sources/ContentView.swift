@@ -7,7 +7,7 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            Color(.systemGroupedBackground).ignoresSafeArea()
+            TwynBrand.paper.ignoresSafeArea()
             ScrollView {
                 VStack(spacing: 18) {
                     header
@@ -25,14 +25,13 @@ struct ContentView: View {
 
     private var header: some View {
         VStack(spacing: 8) {
-            Image(systemName: "faceid")
-                .font(.system(size: 46))
-                .foregroundStyle(.tint)
-            Text("Twyn SDK")
-                .font(.largeTitle.bold())
+            ZStack {
+                Circle().fill(TwynBrand.signal).frame(width: 64, height: 64)
+                Image(systemName: "faceid").font(.system(size: 30)).foregroundStyle(TwynBrand.ink)
+            }
+            Text("Twyn").font(.system(size: 34, weight: .bold)).foregroundStyle(TwynBrand.ink)
             Text("Face liveness + device integrity")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(.subheadline).foregroundStyle(TwynBrand.inkSoft)
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 8)
@@ -40,20 +39,22 @@ struct ContentView: View {
 
     private var inputCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Person ID")
-                .font(.caption).bold()
-                .foregroundStyle(.secondary)
+            Text("PERSON ID")
+                .font(.caption2.bold()).tracking(1.2)
+                .foregroundStyle(TwynBrand.inkSoft)
             TextField("personId", text: $personId)
                 .font(.body.monospaced())
+                .foregroundStyle(TwynBrand.ink)
                 .keyboardType(.numberPad)
                 .autocorrectionDisabled()
                 .padding(12)
-                .background(Color(.secondarySystemBackground))
+                .background(TwynBrand.paper.opacity(0.6))
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
         .padding(16)
-        .background(Color(.systemBackground))
+        .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(TwynBrand.border, lineWidth: 1))
     }
 
     private var startButton: some View {
@@ -61,21 +62,14 @@ struct ContentView: View {
             coordinator.start(personId: personId)
         } label: {
             Label("Start enrollment", systemImage: "camera.fill")
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 6)
         }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .buttonStyle(BrandButtonStyle())
     }
 
     private func resultCard(_ r: EnrollmentResult) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
-                Image(systemName: r.symbol)
-                    .font(.title)
-                    .foregroundStyle(.white)
+                Image(systemName: r.symbol).font(.title).foregroundStyle(.white)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(r.title).font(.title3.bold()).foregroundStyle(.white)
                     Text(r.subtitle).font(.caption).foregroundStyle(.white.opacity(0.9))
@@ -101,21 +95,23 @@ struct ContentView: View {
     private var logCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Callbacks").font(.headline)
+                Text("Callbacks").font(.headline).foregroundStyle(TwynBrand.ink)
                 Spacer()
                 Button("Clear") { coordinator.log = "Ready." }
-                    .font(.caption)
+                    .font(.caption).tint(TwynBrand.signal)
             }
             ScrollView {
                 Text(coordinator.log)
                     .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(TwynBrand.ink)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .textSelection(.enabled)
             }
             .frame(maxHeight: 220)
         }
         .padding(16)
-        .background(Color(.systemBackground))
+        .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(TwynBrand.border, lineWidth: 1))
     }
 }
