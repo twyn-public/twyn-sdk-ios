@@ -4,7 +4,7 @@ target 'TwynSampleApp' do
   use_frameworks! :linkage => :static
 
   # The full Twyn iOS SDK (face liveness + device integrity). Private repo.
-  pod 'TwynIOSSDK',    :git => 'https://github.com/twyn-internal/twyn-ios-sdk.git', :tag => 'ios-0.2.0'
+  pod 'TwynIOSSDK',    :git => 'https://github.com/twyn-internal/twyn-ios-sdk.git', :tag => 'ios-0.2.1'
 
   # Rust cores (private).
   pod 'TwynTrustCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.2.0'
