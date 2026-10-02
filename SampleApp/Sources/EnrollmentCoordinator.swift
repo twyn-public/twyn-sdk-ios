@@ -11,6 +11,7 @@ final class EnrollmentCoordinator: NSObject, ObservableObject, T4FastIDDelegate 
     func start(personId: String) {
         let sdk = T4FastIDSDK()
         sdk.delegate = self
+        sdk.sdkKey = "af9e4536-4b01-44bc-8063-1b3638dbcc61"
         sdk.personId = personId
         sdk.canal = "TWYN"
         sdk.env = "dev"
