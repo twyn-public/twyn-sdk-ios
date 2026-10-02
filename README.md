@@ -1,4 +1,4 @@
-﻿# twyn-sdk-ios â€” integration sample
+# twyn-sdk-ios â€” integration sample
 
 > Public integration sample for the **Twyn iOS SDK** (runtime-integrity / device
 > identity over the T4FastID liveness flow). This repository contains **no

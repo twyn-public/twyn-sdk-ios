@@ -1,4 +1,4 @@
-﻿// swift-tools-version:5.9
+// swift-tools-version:5.9
 import PackageDescription
 
 // Twyn iOS SDK â€” binary distribution.

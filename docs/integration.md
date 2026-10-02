@@ -1,4 +1,4 @@
-﻿# iOS integration guide
+# iOS integration guide
 
 ## 1. Requirements
 
