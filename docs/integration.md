@@ -35,7 +35,7 @@ platform :ios, '15.6'
 target 'YourApp' do
   use_frameworks! :linkage => :static
 
-  pod 'TwynIOSSDK',    :git => 'https://github.com/twyn-internal/twyn-ios-sdk.git',  :tag => 'ios-0.2.0'
+  pod 'TwynIOSSDK',    :git => 'https://github.com/twyn-internal/twyn-ios-sdk.git',  :tag => 'ios-0.1.6'
   pod 'TwynTrustCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.2.0'
   pod 'TwynDeviceCore',:git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.2.0'
 end
