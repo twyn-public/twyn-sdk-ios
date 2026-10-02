@@ -26,12 +26,12 @@ let package = Package(
         .binaryTarget(
             name: "TwynTrustCore",
             url: "https://github.com/twyn-internal/twyn-sdk-dist/releases/download/trustcore-0.1.0/TwynTrustCore.xcframework.zip",
-            checksum: "0000000000000000000000000000000000000000000000000000000000000000"
+            checksum: "437688c00493c2c66cb597d1eaa2217325998fcfad5431b05ebcf556cdf6331d"
         ),
         .binaryTarget(
             name: "TwynDeviceCore",
             url: "https://github.com/twyn-internal/twyn-sdk-dist/releases/download/devicecore-0.1.0/TwynDeviceCore.xcframework.zip",
-            checksum: "0000000000000000000000000000000000000000000000000000000000000000"
+            checksum: "17f58e779786e810c310be22d1562f18bde4106c2e22505ca15c235194d23de3"
         ),
     ]
 )
