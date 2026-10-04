@@ -45,7 +45,7 @@ target 'YourApp' do
   use_frameworks! :linkage => :static   # the cores are static binaries
 
   # The Twyn SDK (private). Pulled with your git credentials.
-  pod 'TwynIOSSDK',    :git => 'https://github.com/twyn-internal/twyn-ios-sdk.git',  :tag => 'ios-0.3.3'
+  pod 'TwynIOSSDK',    :git => 'https://github.com/twyn-internal/twyn-ios-sdk.git',  :tag => 'ios-0.3.4'
   pod 'TwynTrustCore', :git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.2.0'
   pod 'TwynDeviceCore',:git => 'https://github.com/twyn-internal/twyn-sdk-dist.git', :tag => 'ios-0.2.0'
 end
